@@ -28,31 +28,31 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 ENTITY alu IS
-	PORT(
-		a_i			: IN	UNSIGNED(7 downto 0);
-		b_i			: IN	UNSIGNED(7 downto 0);
-		sub_i		: IN	STD_LOGIC;
-		result_o	: OUT	UNSIGNED(7 downto 0);
-		carry_o		: OUT	STD_LOGIC
-	);
+    PORT(
+        a_i         : IN    UNSIGNED(7 downto 0);
+        b_i         : IN    UNSIGNED(7 downto 0);
+        sub_i       : IN    STD_LOGIC;
+        result_o    : OUT   UNSIGNED(7 downto 0);
+        carry_o     : OUT   STD_LOGIC
+    );
 END alu;
 
 ARCHITECTURE RTL OF alu IS
 
-	SIGNAL	val	: UNSIGNED(8 downto 0) := (others => '0');	-- includes carry
+    SIGNAL  val : UNSIGNED(8 downto 0) := (others => '0');  -- includes carry
 
 BEGIN
 
-	PROCESS(sub_i, a_i, b_i)
-	BEGIN
-		if (sub_i = '1') then
-			val <= ('0' & a_i) - ('0' & b_i);
-		else
-			val <= ('0' & a_i) + ('0' & b_i);
-		end if;
-	END PROCESS;
-	
-	result_o	<= val(7 downto 0);
-	carry_o		<= val(8);
+    PROCESS(sub_i, a_i, b_i)
+    BEGIN
+        if (sub_i = '1') then
+            val <= ('0' & a_i) - ('0' & b_i);
+        else
+            val <= ('0' & a_i) + ('0' & b_i);
+        end if;
+    END PROCESS;
+    
+    result_o    <= val(7 downto 0);
+    carry_o     <= val(8);
 
 end ARCHITECTURE RTL;

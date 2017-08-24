@@ -104,7 +104,8 @@ BEGIN
     -- simple "command processor" to print CPU state trace as text via serial
     TRACE: entity work.cpu_trace
     port map (
-        clk_i       => clk,        clk_en_i    => clk_en,  
+        clk_i       => clk,
+        clk_en_i    => clk_en,  
         rst_i       => rst,
         halt_i      => halt,
         tx_busy_i   => tx_busy,

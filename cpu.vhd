@@ -421,12 +421,14 @@ BEGIN
             end if;
         end if;
     END PROCESS control;
-
+
+
     -- This is a simple "debug port" that saves having to run a large number of signals out of this module
     -- but still provides a way to "peer inside" at the CPU state.
     -- Here are how the debug registers are mapped:
     --
-    --                              debug_out_o    -- debug_sel_i 0000     id h  su cy  0  t  t  t
+    --                              debug_out_o
+    -- debug_sel_i 0000     id h  su cy  0  t  t  t
     -- debug_sel_i 0001     0  ce co ro io ao bo eo
     -- debug_sel_i 0010     jc j  mi ri ii ai bi oi
     -- debug_sel_i 0011     cpu_bus

@@ -29,7 +29,7 @@ of the CPU (very much like the LEDs on the breadboard version).  Here is sample 
 
 Prints this "CPU trace" on a serial terminal 
 	
-    E-SAP-VHDL: *RESET*
+    BE-SAP-VHDL: *RESET*
     T0: => 00000000 => |
         C=0000 M=0000 I=00000000 (NOP) A=00000000 B=00000000 CY=0 O=00000000
     T0: CO => 00000000 => MI |

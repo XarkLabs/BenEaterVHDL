@@ -443,7 +443,7 @@ BEGIN
 	BEGIN
 		-- need to capture bus on clock edge to get desired value (as CPU does)
 		if (rising_edge(clk)) then
-			if (clk_en = '1') then
+			if (clk_en_i = '1') then	-- note: use clk_en_i so we capture bus even when CPU halted (to get HLT tracing correctly)
 				bus_save	:= cpu_bus;
 			end if;
 		end if;

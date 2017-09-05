@@ -13,9 +13,12 @@ to Ben's terminology and design, but I couldn't resist changing a few minor thin
  * clocked FPGA BRAM on negative clock edge to "simulate" async RAM (data available on next CPU cycle)
  * no decimal 7-segment decode for output (but I do have nifty terminal trace...)
 
-It has been developed on a TinyFPGA-A2 (http://tinyfpga.com/) board with a Lattice MachXO2-1200 FPGA using the Lattice Diamond software (free version).
+It has been developed on a TinyFPGA-A2 (http://tinyfpga.com/) board with a Lattice MachXO2-1200 FPGA using the Lattice Diamond software (free version). It has also been converted for use on the Microwavemont "FPGA board for I2C, SPI device prototyping" (https://hackaday.io/project/26175-hdl-training-board-by-fpga-for-real-beginner or https://www.tindie.com/products/microwavemont/fpga-board-for-i2c-spi-device-prototyping/).
 
-The CPU has 8-bits of binary on GPIO pins 1-8 for the "OUT" opcode and also has one button to halt the clock and one for reset.  There is also a transmit
+Here it is running on the Microwavemont FPGA board (with USB Serial hookup for output):
+![Alt text](MicrowavemontFPGA_w_serial.jpg?raw=true "BenEaterVHDL running on Microwavemont FPGA board (with USB Serial hookup for output)")
+
+The CPU has 8-bits of binary on GPIO pins 1-8 for the "OUT" opcode (also 2 digit hex on seven-segment display for Microwavemont FPGA board) and also has one button to halt the clock and one for reset.  There is also a transmit
 only UART output TX on pin 9 (this can be used with a USB serial adapter at 9600 baud 8N1).  The UART will output real-time (with very slow clock) state
 of the CPU (very much like the LEDs on the breadboard version).  Here is sample output running this simple program:
 

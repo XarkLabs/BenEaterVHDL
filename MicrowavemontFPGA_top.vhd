@@ -93,12 +93,12 @@ ARCHITECTURE RTL of Microwavemont_top is
 	SIGNAL	vled		: STD_LOGIC_VECTOR(7 downto 0);			-- "virtual" LEDs multiplexed with 7-segment onto real LEDs
 	SIGNAL	segments	: STD_LOGIC_VECTOR(7 downto 0);			-- 7-segment segments (a, b, c, d, e, f, g, dp)
 
-	SIGNAL 	number_r	: STD_LOGIC_VECTOR (7 downto 0);		-- 8-bit number to display in hex
-	SIGNAL 	decimals_r	: STD_LOGIC_VECTOR (1 downto 0);		-- decimal point for each digit (left, right)
-	SIGNAL 	blank_r		: STD_LOGIC_VECTOR (1 downto 0);		-- true if digit is to be blanked (no segments lit)
+	SIGNAL	number_r	: STD_LOGIC_VECTOR (7 downto 0);		-- 8-bit number to display in hex
+	SIGNAL	decimals_r	: STD_LOGIC_VECTOR (1 downto 0);		-- decimal point for each digit (left, right)
+	SIGNAL	blank_r		: STD_LOGIC_VECTOR (1 downto 0);		-- true if digit is to be blanked (no segments lit)
 
-	SIGNAL 	counter		: UNSIGNED (12 downto 0);				-- count to 0x1fff for ~= 1464Hz @ 12Mhz clock
-	SIGNAL 	digit		: INTEGER range 0 to 2;					-- digit number being multiplexed (0 = right, 1=left, 2=leds)
+	SIGNAL	counter		: UNSIGNED (12 downto 0);				-- count to 0x1fff for ~= 1464Hz @ 12Mhz clock
+	SIGNAL	digit		: INTEGER range 0 to 2;					-- digit number being multiplexed (0 = right, 1=left, 2=leds)
 
 BEGIN
 	clk			<= clk_12mhz;
@@ -121,15 +121,15 @@ BEGIN
 	rst			<= rst_btn;
 	
 	slow_clk: PROCESS(clk, rst)
-    BEGIN
-        IF(rst = '1') THEN
+	BEGIN
+		IF(rst = '1') THEN
 			ms_count	<= 0;
 			cpu_count	<= 0;
-            led <= '0';
-            clk_en <= '0';
-        ELSE
-            IF(rising_edge(clk)) THEN
-                clk_en <= '0';
+			led <= '0';
+			clk_en <= '0';
+		ELSE
+			IF(rising_edge(clk)) THEN
+				clk_en <= '0';
 				if (ms_count = 0) then
 					ms_count <= cyc_per_10ms - 1;
 					IF (cpu_count = 0) THEN
@@ -139,11 +139,11 @@ BEGIN
 					else
 						cpu_count <= cpu_count - 1;
 					end if;
-                ELSE
+				ELSE
 					ms_count <= ms_count - 1;
-                END IF;
-            END IF;
-        END IF;
+				END IF;
+			END IF;
+		END IF;
 	END PROCESS slow_clk;
 
 	sys: entity work.system
@@ -152,8 +152,8 @@ BEGIN
 	)
 	port map(
 		clk_i		=> clk,	
-	    clk_en_i	=> clk_en,
-	    rst_i		=> rst,
+		clk_en_i	=> clk_en,
+		rst_i		=> rst,
 		out_o		=> cpu_out,
 		out_rdy_o	=> cpu_out_rdy,
 		halt_o		=> halt,
@@ -161,7 +161,7 @@ BEGIN
 	);
 	
 	vled		<= cpu_out;		-- signal to display on 8 LEDs
-	number_r 	<= cpu_out;		-- signal to display as 2 digit hex on 7-segments
+	number_r	<= cpu_out;		-- signal to display as 2 digit hex on 7-segments
 	decimals_r	<= halt & (led AND (NOT user_btn) AND (NOT halt));	-- decimal points per digit
 	blank_r		<= NOT cpu_out_rdy & NOT cpu_out_rdy;	-- blank out per digit
 

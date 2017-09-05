@@ -28,39 +28,39 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 ENTITY counter4 IS
-    PORT(
-        clk_i       : IN    STD_LOGIC;
-        clk_en_i    : IN    STD_LOGIC;
-        rst_i       : IN    STD_LOGIC;
-        set_i       : IN    STD_LOGIC;
-        inc_i       : IN    STD_LOGIC;
-        value_i     : IN    UNSIGNED(3 downto 0);
-        value_o     : OUT   UNSIGNED(3 downto 0)
-    );
+	PORT(
+		clk_i		: IN	STD_LOGIC;
+		clk_en_i	: IN	STD_LOGIC;
+		rst_i		: IN	STD_LOGIC;
+		set_i		: IN	STD_LOGIC;
+		inc_i		: IN	STD_LOGIC;
+		value_i		: IN	UNSIGNED(3 downto 0);
+		value_o		: OUT	UNSIGNED(3 downto 0)
+	);
 END counter4;
 
 ARCHITECTURE RTL OF counter4 IS
 
-    SIGNAL  value   : UNSIGNED(3 downto 0) := (others => '0');
+	SIGNAL	value	: UNSIGNED(3 downto 0) := (others => '0');
 
 BEGIN
 
-    PROCESS(rst_i, clk_i)
-    BEGIN
-        if (rst_i = '1') then
-            value <= (others => '0');
-        elsif (rising_edge(clk_i)) then
-            if (clk_en_i = '1') then
-                if (inc_i = '1') then
-                    value <= value + 1;
-                end if;
-                if (set_i = '1') then
-                    value <= value_i;
-                end if;
-            end if;
-        end if;
-    END PROCESS;
-    
-    value_o <= value;
-    
+	PROCESS(rst_i, clk_i)
+	BEGIN
+		if (rst_i = '1') then
+			value <= (others => '0');
+		elsif (rising_edge(clk_i)) then
+			if (clk_en_i = '1') then
+				if (inc_i = '1') then
+					value <= value + 1;
+				end if;
+				if (set_i = '1') then
+					value <= value_i;
+				end if;
+			end if;
+		end if;
+	END PROCESS;
+	
+	value_o <= value;
+	
 END ARCHITECTURE RTL;

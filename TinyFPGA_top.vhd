@@ -38,12 +38,12 @@ use machxo2.all;
 -- pin20 is clock LED (blicks with "slow" clock)
 
 ENTITY TinyFPGA_top IS
-    generic
-    (
+	generic
+	(
 		C_SYSTEM_HZ:	integer	:= 19_000_000;	-- master clock (in Hz)
 		C_TARGET_HZ:	integer := 1			-- speed of "slow" clock in Hz used by CPU
-                                                -- needs to be low so CPU trace has time
-    );
+												-- needs to be low so CPU trace has time
+	);
 
 	PORT(
 		pin1		: OUT	STD_LOGIC;	-- CPU out 0 led 
@@ -62,43 +62,43 @@ ENTITY TinyFPGA_top IS
 		pin20_miso	: OUT	STD_LOGIC;	-- CPU slow clock LED
 		pin21		: IN	STD_LOGIC;	-- PAUSE button
 		pin22		: IN	STD_LOGIC	-- /RESET button
-    );
+	);
 END TinyFPGA_top;
 
 ARCHITECTURE RTL of TinyFPGA_top is
 
-    -- Lattice MachXO2 internal oscillator
-    COMPONENT OSCH
-        -- synthesis translate_off
-        GENERIC (NOM_FREQ: string := "19.00");
-        -- synthesis translate_on
-        PORT(
-            STDBY:      IN  std_logic;
-            OSC:        OUT std_logic;
-            SEDSTDBY:   OUT std_logic
-        );
-    END COMPONENT;
+	-- Lattice MachXO2 internal oscillator
+	COMPONENT OSCH
+		-- synthesis translate_off
+		GENERIC (NOM_FREQ: string := "19.00");
+		-- synthesis translate_on
+		PORT(
+			STDBY:		IN	std_logic;
+			OSC:		OUT std_logic;
+			SEDSTDBY:	OUT std_logic
+		);
+	END COMPONENT;
 
-    attribute NOM_FREQ : string;
-    attribute NOM_FREQ of OSCinst0 : label is "19.00";
+	attribute NOM_FREQ : string;
+	attribute NOM_FREQ of OSCinst0 : label is "19.00";
 
-    SIGNAL  rst     : STD_LOGIC := '0';                         -- asynchronous reset
-    SIGNAL  clk     : STD_LOGIC := '0';                         -- CPU clock
-    SIGNAL  clk_en  : STD_LOGIC := '0';                         -- CPU clock enable (clock ignored if 0)
-    SIGNAL  halt    : STD_LOGIC := '0';                         -- CPU halted
+	SIGNAL	rst		: STD_LOGIC := '0';							-- asynchronous reset
+	SIGNAL	clk		: STD_LOGIC := '0';							-- CPU clock
+	SIGNAL	clk_en	: STD_LOGIC := '0';							-- CPU clock enable (clock ignored if 0)
+	SIGNAL	halt	: STD_LOGIC := '0';							-- CPU halted
 
-    SIGNAL  cpu_out : STD_LOGIC_VECTOR(7 downto 0) := (others => '0');
+	SIGNAL	cpu_out : STD_LOGIC_VECTOR(7 downto 0) := (others => '0');
 	SIGNAL	cpu_out_rdy	: STD_LOGIC := '0';	
-    
+	
 	SIGNAL	tx_o		: STD_LOGIC := '0';	
 	
 	SIGNAL	rst_btn_ff	: STD_LOGIC_VECTOR(1 downto 0) := "11";
 	SIGNAL	rst_btn		: STD_LOGIC := '0';
 	SIGNAL	user_btn_ff	: STD_LOGIC_VECTOR(1 downto 0) := "00";
 	SIGNAL	user_btn	: STD_LOGIC := '0';
-    
-    SIGNAL  led     : STD_LOGIC := '0';
-    
+	
+	SIGNAL	led		: STD_LOGIC := '0';
+	
 	CONSTANT cyc_per_10ms : INTEGER := (C_SYSTEM_HZ+50)/100;
 	CONSTANT ms_per_clk	: INTEGER := (C_TARGET_HZ*100)/2;
 
@@ -107,16 +107,16 @@ ARCHITECTURE RTL of TinyFPGA_top is
 
 BEGIN
 
-    -- instantiate MachXO2 internal oscillator @ ~19 Mhz (close enough for 9600 baud)
-    OSCInst0: OSCH
-    -- synthesis translate_off
-    GENERIC MAP( NOM_FREQ => "19.00" )
-    -- synthesis translate_on
-    PORT MAP (
-        STDBY       => '0',
-        OSC         => clk,
-        SEDSTDBY    => open
-    );
+	-- instantiate MachXO2 internal oscillator @ ~19 Mhz (close enough for 9600 baud)
+	OSCInst0: OSCH
+	-- synthesis translate_off
+	GENERIC MAP( NOM_FREQ => "19.00" )
+	-- synthesis translate_on
+	PORT MAP (
+		STDBY		=> '0',
+		OSC			=> clk,
+		SEDSTDBY	=> open
+	);
 
 	pin1		<= cpu_out(0);
 	pin2		<= cpu_out(1);
@@ -126,8 +126,8 @@ BEGIN
 	pin6		<= cpu_out(5);
 	pin7_done	<= cpu_out(6);
 	pin8_pgmn	<= cpu_out(7);
-    pin9_jtgnb  <= tx_o;
-    
+	pin9_jtgnb	<= tx_o;
+	
 	pin16		<= 'Z';	
 	pin17		<= 'Z';	
 	pin18_cs	<= 'Z';
@@ -150,15 +150,15 @@ BEGIN
 	rst			<= rst_btn;
 
 	slow_clk: PROCESS(clk, rst)
-    BEGIN
-        IF(rst = '1') THEN
+	BEGIN
+		IF(rst = '1') THEN
 			ms_count	<= 0;
 			cpu_count	<= 0;
-            led <= '0';
-            clk_en <= '0';
-        ELSE
-            IF(rising_edge(clk)) THEN
-                clk_en <= '0';
+			led <= '0';
+			clk_en <= '0';
+		ELSE
+			IF(rising_edge(clk)) THEN
+				clk_en <= '0';
 				if (ms_count = 0) then
 					ms_count <= cyc_per_10ms - 1;
 					IF (cpu_count = 0) THEN
@@ -168,26 +168,26 @@ BEGIN
 					else
 						cpu_count <= cpu_count - 1;
 					end if;
-                ELSE
+				ELSE
 					ms_count <= ms_count - 1;
-                END IF;
-            END IF;
-        END IF;
+				END IF;
+			END IF;
+		END IF;
 	END PROCESS slow_clk;
 
-    sys: entity work.system
-    generic map (
-        C_SYSTEM_HZ => C_SYSTEM_HZ
-    )
-    port map(
-        clk_i       => clk, 
-        clk_en_i    => clk_en,
-        rst_i       => rst,
-        out_o       => cpu_out,
+	sys: entity work.system
+	generic map (
+		C_SYSTEM_HZ => C_SYSTEM_HZ
+	)
+	port map(
+		clk_i		=> clk, 
+		clk_en_i	=> clk_en,
+		rst_i		=> rst,
+		out_o		=> cpu_out,
 		out_rdy_o	=> cpu_out_rdy,
-        halt_o      => halt,
-        tx_o        => tx_o
-    );
-    
+		halt_o		=> halt,
+		tx_o		=> tx_o
+	);
+	
 
 END ARCHITECTURE RTL;

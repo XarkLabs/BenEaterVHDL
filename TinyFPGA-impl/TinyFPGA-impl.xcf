@@ -19,9 +19,8 @@
 				<BScanLen>1</BScanLen>
 				<BScanVal>0</BScanVal>
 			</Bypass>
-			<File>./impl/BenEaterVHDL_impl.bit</File>
-			<FileTime>08/23/17 21:46:58</FileTime>
-			<JedecChecksum>N/A</JedecChecksum>
+			<File>C:/Users/KenJ/BenEaterVHDL/TinyFPGA-impl/BenEaterVHDL-TinyFPGA_TinyFPGA-impl.bit</File>
+			<FileTime>09/04/17 23:09:50</FileTime>
 			<Operation>SRAM Fast Program</Operation>
 			<Option>
 				<SVFVendor>JTAG STANDARD</SVFVendor>
@@ -48,5 +47,9 @@
 		<CableName>USB2</CableName>
 		<PortAdd>FTUSB-0</PortAdd>
 		<USBID>Dual RS232-HS A Location 0000 Serial A</USBID>
+		<JTAGPinSetting>
+			TRST	ABSENT;
+			ISPEN	ABSENT;
+		</JTAGPinSetting>
 	</CableOptions>
 </ispXCF>

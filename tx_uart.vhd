@@ -33,11 +33,11 @@ entity tx_uart is
 		C_BPS:	integer := 9600						-- UART transmition rate in bits per second (aka baud)
 	);
 	port (
-		rst_i:	IN  STD_LOGIC;						-- reset
-		clk_i:	IN  STD_LOGIC;						-- FPGA clock
+		rst_i:	IN	STD_LOGIC;						-- reset
+		clk_i:	IN	STD_LOGIC;						-- FPGA clock
 
-		we_i:	IN  STD_LOGIC;						-- pulse high to send byte (when busy_o is low)
-		data_i:	IN  STD_LOGIC_VECTOR(7 downto 0);	-- data to send
+		we_i:	IN	STD_LOGIC;						-- pulse high to send byte (when busy_o is low)
+		data_i:	IN	STD_LOGIC_VECTOR(7 downto 0);	-- data to send
 		
 		busy_o: OUT STD_LOGIC;						-- high when UART busy transmitting
 		tx_o:	OUT STD_LOGIC						-- TX pin output

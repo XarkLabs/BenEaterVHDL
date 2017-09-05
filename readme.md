@@ -21,22 +21,22 @@ Here it is running on the Microwavemont FPGA board (with USB Serial hookup for o
 This is a simple educational 8-bit CPU with a 4-bit address bus (so 16 memory locations for program and data).  It is controlled by "microcode" that asserts the proper control signals to make the CPU function and define the instructions.
 
 Here are the instructions currently implemented:
-    0000 xxxx   NOP             no-operation					3 cycles
-    0001 mmmm   LDA M           A = RAM[M]						4 cycles
-    0010 mmmm   ADD M           A = A+RAM[M] (updates carry)	5 cycles
-    0011 mmmm   SUB M           A = A-RAM[M] (updates carry)	5 cycles
-    0100 mmmm   STA M           RAM[M] = A						4 cycles
-    0101 iiii   LDI N           A = N (4-LSB)					3 cycles
-    0110 mmmm   JMP M           PC = M							3 cycles
-    0111 mmmm   JCS M           if (carry) then PC = M			3 cycles
+    0000 xxxx   NOP             no-operation                    3 cycles
+    0001 mmmm   LDA M           A = RAM[M]                      4 cycles
+    0010 mmmm   ADD M           A = A+RAM[M] (updates carry)    5 cycles
+    0011 mmmm   SUB M           A = A-RAM[M] (updates carry)    5 cycles
+    0100 mmmm   STA M           RAM[M] = A                      4 cycles
+    0101 iiii   LDI N           A = N (4-LSB)                   3 cycles
+    0110 mmmm   JMP M           PC = M                          3 cycles
+    0111 mmmm   JCS M           if (carry) then PC = M          3 cycles
     1000 xxxx   ??? (unused, acts like NOP)
     1001 xxxx   ??? (unused, acts like NOP)
     1010 xxxx   ??? (unused, acts like NOP)
     1011 xxxx   ??? (unused, acts like NOP)
     1100 xxxx   ??? (unused, acts like NOP)
     1101 xxxx   ??? (unused, acts like NOP)
-    1110 xxxx   OUT             output A register				3 cycles
-    1111 xxxx   HLT             halt CPU clock					3 cycles	
+    1110 xxxx   OUT             output A register               3 cycles
+    1111 xxxx   HLT             halt CPU clock                  3 cycles    
 
 The CPU has 8-bits of binary on GPIO pins 1-8 for the "OUT" opcode (also 2 digit hex on seven-segment display for Microwavemont FPGA board) and also has one button to halt the clock and one for reset.  There is also a transmit
 only UART output TX on pin 9 (this can be used with a USB serial adapter at 9600 baud 8N1).  The UART will output real-time (with very slow clock) state
@@ -91,34 +91,34 @@ It only uses a small amount of FPGA resources and can likely very easily be move
 
 On the MachXO2-1200 here is the resource use (on TinyFPGA-A2 board):
 
-   Number of registers:    152 out of  1346 (11%)
+    Number of registers:    152 out of  1346 (11%)
       PFU registers:          151 out of  1280 (12%)
       PIO registers:            1 out of    66 (2%)
-   Number of SLICEs:       141 out of   640 (22%)
+    Number of SLICEs:       141 out of   640 (22%)
       SLICEs as Logic/ROM:    141 out of   640 (22%)
       SLICEs as RAM:            0 out of   480 (0%)
       SLICEs as Carry:         27 out of   640 (4%)
-   Number of LUT4s:        278 out of  1280 (22%)
+    Number of LUT4s:        278 out of  1280 (22%)
       Number used as logic LUTs:        224
       Number used as distributed RAM:     0
       Number used as ripple logic:       54
       Number used as shift registers:     0
-   Number of PIO sites used: 16 + 4(JTAG) out of 22 (91%)
-   Number of block RAMs:  2 out of 7 (29%)
+    Number of PIO sites used: 16 + 4(JTAG) out of 22 (91%)
+    Number of block RAMs:  2 out of 7 (29%)
 
-                             LUT4              PFU Registers     IO Registers      EBR               Carry Cells       SLICE             
-TinyFPGA_top(TinyFPGA_top)   224(28)           151(31)           1(1)              2(0)              27(10)            141(24.83)        
-    system(sys)              196(1)            120(0)            0(0)              2(0)              17(0)             116.17(0.330002)  
-        cpu(CPU)             122(111)          71(39)            0(0)              0(0)              5(0)              66.67(52.75)      
-            reg8_0(a_reg)    1(1)              8(8)              0(0)              0(0)              0(0)              2.75(2.75)        
-            alu(alu_unit)    0(0)              0(0)              0(0)              0(0)              5(5)              2.5(2.5)          
-            reg8_1(b_reg)    1(1)              8(8)              0(0)              0(0)              0(0)              2.25(2.25)        
-            reg8(i_reg)      1(1)              8(8)              0(0)              0(0)              0(0)              2.25(2.25)        
-            reg4(mar_reg)    1(1)              4(4)              0(0)              0(0)              0(0)              1.42(1.42)        
-            counter4(pc_reg) 7(7)              4(4)              0(0)              0(0)              0(0)              2.75(2.75)        
-        cpu_trace(TRACE)     54(54)            27(27)            0(0)              1(1)              6(6)              34.17(34.17)      
-        tx_uart(UART)        19(19)            22(22)            0(0)              0(0)              6(6)              15(15)            
-        RAM(bram)            0(0)              0(0)              0(0)              1(1)              0(0)              0(0)              
+                                 LUT4              PFU Registers     IO Registers      EBR               Carry Cells       SLICE             
+    TinyFPGA_top(TinyFPGA_top)   224(28)           151(31)           1(1)              2(0)              27(10)            141(24.83)        
+        system(sys)              196(1)            120(0)            0(0)              2(0)              17(0)             116.17(0.330002)  
+            cpu(CPU)             122(111)          71(39)            0(0)              0(0)              5(0)              66.67(52.75)      
+                reg8_0(a_reg)    1(1)              8(8)              0(0)              0(0)              0(0)              2.75(2.75)        
+                alu(alu_unit)    0(0)              0(0)              0(0)              0(0)              5(5)              2.5(2.5)          
+                reg8_1(b_reg)    1(1)              8(8)              0(0)              0(0)              0(0)              2.25(2.25)        
+                reg8(i_reg)      1(1)              8(8)              0(0)              0(0)              0(0)              2.25(2.25)        
+                reg4(mar_reg)    1(1)              4(4)              0(0)              0(0)              0(0)              1.42(1.42)        
+                counter4(pc_reg) 7(7)              4(4)              0(0)              0(0)              0(0)              2.75(2.75)        
+            cpu_trace(TRACE)     54(54)            27(27)            0(0)              1(1)              6(6)              34.17(34.17)      
+            tx_uart(UART)        19(19)            22(22)            0(0)              0(0)              6(6)              15(15)            
+            RAM(bram)            0(0)              0(0)              0(0)              1(1)              0(0)              0(0)              
    
 -Xark (https://hackaday.io/Xark)
 

@@ -1,2 +1,8 @@
 # Set the default behavior, in case people don't have core.autocrlf set.
-* text eol=lf
+* text=auto
+*.bit -text
+*.jed -text
+*.lpf text eol=lf
+*.ldf text eol=lf
+*.vhd text eol=lf
+*.pkg text eol=lf

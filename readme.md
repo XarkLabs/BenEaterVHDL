@@ -21,6 +21,7 @@ Here it is running on the Microwavemont FPGA board (with USB Serial hookup for o
 This is a simple educational 8-bit CPU with a 4-bit address bus (so 16 memory locations for program and data).  It is controlled by "microcode" that asserts the proper control signals to make the CPU function and define the instructions.
 
 Here are the instructions currently implemented:
+
     0000 xxxx   NOP             no-operation                    3 cycles
     0001 mmmm   LDA M           A = RAM[M]                      4 cycles
     0010 mmmm   ADD M           A = A+RAM[M] (updates carry)    5 cycles

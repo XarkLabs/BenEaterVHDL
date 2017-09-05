@@ -1,57 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<BaliProject version="3.2" title="BenEaterVHDL" device="LCMXO2-1200HC-4SG32C" default_implementation="impl">
-    <Options>
-        <Option name="HDL type" value="Verilog"/>
-    </Options>
-    <Implementation title="impl" dir="impl" description="impl" synthesis="synplify" default_strategy="Strategy1">
-        <Options>
-            <Option name="HDL type" value="Verilog"/>
-            <Option name="def_top" value="TinyFPGA_top"/>
-            <Option name="lib" value="work"/>
-            <Option name="top" value="TinyFPGA_top"/>
-        </Options>
+<BaliProject version="3.2" title="BenEaterVHDL-TinyFPGA" device="LCMXO2-1200HC-4SG32C" default_implementation="TinyFPGA-impl">
+    <Options/>
+    <Implementation title="TinyFPGA-impl" dir="TinyFPGA-impl" description="TinyFPGA-impl" synthesis="synplify" default_strategy="Strategy1">
+        <Options def_top="TinyFPGA_top" top="system_tb"/>
         <Source name="TinyFPGA_top.vhd" type="VHDL" type_short="VHDL" syn_sim="SynOnly">
-            <Options lib="work" top_module="TinyFPGA_top"/>
+            <Options top_module="TinyFPGA_top"/>
         </Source>
         <Source name="system_tb.vhd" type="VHDL" type_short="VHDL" syn_sim="SimOnly">
-            <Options lib="work"/>
+            <Options top_module="system_tb"/>
         </Source>
         <Source name="system.vhd" type="VHDL" type_short="VHDL">
-            <Options lib="work"/>
+            <Options/>
         </Source>
         <Source name="cpu.vhd" type="VHDL" type_short="VHDL">
-            <Options lib="work"/>
+            <Options/>
         </Source>
         <Source name="alu.vhd" type="VHDL" type_short="VHDL">
-            <Options lib="work"/>
+            <Options/>
         </Source>
         <Source name="reg4.vhd" type="VHDL" type_short="VHDL">
-            <Options lib="work"/>
+            <Options/>
         </Source>
         <Source name="reg8.vhd" type="VHDL" type_short="VHDL">
-            <Options lib="work"/>
+            <Options/>
         </Source>
         <Source name="counter4.vhd" type="VHDL" type_short="VHDL">
-            <Options lib="work"/>
+            <Options/>
         </Source>
         <Source name="ram.vhd" type="VHDL" type_short="VHDL">
-            <Options lib="work"/>
+            <Options/>
         </Source>
         <Source name="cpu_trace.vhd" type="VHDL" type_short="VHDL">
-            <Options lib="work"/>
+            <Options/>
         </Source>
         <Source name="tx_uart.vhd" type="VHDL" type_short="VHDL">
-            <Options lib="work"/>
-        </Source>
-        <Source name="BenEaterVHDL.lpf" type="Logic Preference" type_short="LPF">
             <Options/>
         </Source>
-        <Source name="BenEaterVHDL_sim/BenEaterVHDL_sim.spf" type="Simulation Project File" type_short="SPF">
+        <Source name="TinyFPGA-A2.lpf" type="Logic Preference" type_short="LPF">
             <Options/>
         </Source>
-        <Source name="impl/impl.xcf" type="Programming Project File" type_short="Programming">
+        <Source name="TinyFPGA-impl/BenEaterVHDL_TinyFPGA_impl.xcf" type="Programming Project File" type_short="Programming">
             <Options/>
         </Source>
     </Implementation>
-    <Strategy name="Strategy1" file="BenEaterVHDL1.sty"/>
+    <Strategy name="Strategy1" file="BenEaterVHDL_TinyFPGA1.sty"/>
 </BaliProject>

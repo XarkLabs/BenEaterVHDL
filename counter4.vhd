@@ -63,4 +63,4 @@ BEGIN
     
     value_o <= value;
     
-end ARCHITECTURE RTL;
+END ARCHITECTURE RTL;

@@ -33,6 +33,7 @@ ENTITY cpu_trace IS
         clk_en_i    : IN    STD_LOGIC;
         rst_i       : IN    STD_LOGIC;
         halt_i      : IN    STD_LOGIC;
+		busy_o		: OUT	STD_LOGIC;
         tx_busy_i   : IN    STD_LOGIC;
         tx_write_o  : OUT   STD_LOGIC;
         tx_data_o   : OUT   STD_LOGIC_VECTOR(7 downto 0);
@@ -86,8 +87,8 @@ ARCHITECTURE RTL OF cpu_trace IS
 
     signal ROM : rom_type :=
     (
-        x"00", x"00",
-        x"00", x"00",
+		ASCII(NUL), ASCII(NUL),
+		CT_PRINT, CT_PRINT,
         ASCII(CR), CT_PRINT,
         ASCII(LF), CT_PRINT,
         ASCII(CR), CT_PRINT,
@@ -395,6 +396,7 @@ BEGIN
     BEGIN
         if (rst = '1') then
             tx_w        <= '0';
+			last_clk_en	<= '0';
             trace_halt  <= '0';
             trace_addr  <= to_unsigned(1, trace_addr'length);
             debug_reg   <= (others => '0');
@@ -449,6 +451,7 @@ BEGIN
         end if;
     END PROCESS do_trace;
 
+	busy_o		<= '1' when (trace_addr /= 0) else '0'; 
     debug_sel_o <= debug_reg;
     tx_data_o   <= "0" & trace_data;
     tx_write_o  <= tx_w;

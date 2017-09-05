@@ -40,28 +40,28 @@ use machxo2.all;
 ENTITY TinyFPGA_top IS
     generic
     (
-        C_SYSTEM_HZ:    integer := 19_000_000;  -- master clock (in Hz)
-        C_TARGET_HZ:    integer := 2            -- speed of "slow" clock in Hz used by CPU
+		C_SYSTEM_HZ:	integer	:= 19_000_000;	-- master clock (in Hz)
+		C_TARGET_HZ:	integer := 1			-- speed of "slow" clock in Hz used by CPU
                                                 -- needs to be low so CPU trace has time
     );
 
-    PORT(
-        pin1        : OUT   STD_LOGIC;
-        pin2        : OUT   STD_LOGIC;
-        pin3_sn     : OUT   STD_LOGIC;
-        pin4_mosi   : OUT   STD_LOGIC;
-        pin5        : OUT   STD_LOGIC;
-        pin6        : OUT   STD_LOGIC;
-        pin7_done   : OUT   STD_LOGIC;
-        pin8_pgmn   : OUT   STD_LOGIC;
-        pin9_jtgnb  : OUT   STD_LOGIC;
-        pin16       : OUT   STD_LOGIC;
-        pin17       : OUT   STD_LOGIC;
-        pin18_cs    : OUT   STD_LOGIC;
-        pin19_sclk  : OUT   STD_LOGIC;
-        pin20_miso  : OUT   STD_LOGIC;
-        pin21       : IN    STD_LOGIC;
-        pin22       : IN    STD_LOGIC
+	PORT(
+		pin1		: OUT	STD_LOGIC;	-- CPU out 0 led 
+		pin2		: OUT	STD_LOGIC;	-- CPU out 1 led 
+		pin3_sn		: OUT	STD_LOGIC;	-- CPU out 2 led 
+		pin4_mosi	: OUT	STD_LOGIC;	-- CPU out 3 led 
+		pin5		: OUT	STD_LOGIC;	-- CPU out 4 led 
+		pin6		: OUT	STD_LOGIC;	-- CPU out 5 led 
+		pin7_done	: OUT	STD_LOGIC;	-- CPU out 6 led 
+		pin8_pgmn	: OUT	STD_LOGIC;	-- CPU out 7 led 
+		pin9_jtgnb	: OUT	STD_LOGIC;	-- UART tx out
+		pin16		: OUT	STD_LOGIC;	-- LCD MOSI out
+		pin17		: OUT	STD_LOGIC;	-- LCD DC out
+		pin18_cs	: OUT	STD_LOGIC;	-- LCD /CS out
+		pin19_sclk	: OUT	STD_LOGIC;	-- LCD SCK out
+		pin20_miso	: OUT	STD_LOGIC;	-- CPU slow clock LED
+		pin21		: IN	STD_LOGIC;	-- PAUSE button
+		pin22		: IN	STD_LOGIC	-- /RESET button
     );
 END TinyFPGA_top;
 
@@ -88,15 +88,22 @@ ARCHITECTURE RTL of TinyFPGA_top is
     SIGNAL  halt    : STD_LOGIC := '0';                         -- CPU halted
 
     SIGNAL  cpu_out : STD_LOGIC_VECTOR(7 downto 0) := (others => '0');
+	SIGNAL	cpu_out_rdy	: STD_LOGIC := '0';	
     
-    SIGNAL  tx_o    : STD_LOGIC;    
+	SIGNAL	tx_o		: STD_LOGIC := '0';	
+	
+	SIGNAL	rst_btn_ff	: STD_LOGIC_VECTOR(1 downto 0) := "11";
+	SIGNAL	rst_btn		: STD_LOGIC := '0';
+	SIGNAL	user_btn_ff	: STD_LOGIC_VECTOR(1 downto 0) := "00";
+	SIGNAL	user_btn	: STD_LOGIC := '0';
     
     SIGNAL  led     : STD_LOGIC := '0';
     
-    SIGNAL  spi_sck : STD_LOGIC := '0';
-    SIGNAL  spi_mosi: STD_LOGIC := '0';
-    SIGNAL  spi_dc  : STD_LOGIC := '0';
-    SIGNAL  spi_cs  : STD_LOGIC := '0';
+	CONSTANT cyc_per_10ms : INTEGER := (C_SYSTEM_HZ+50)/100;
+	CONSTANT ms_per_clk	: INTEGER := (C_TARGET_HZ*100)/2;
+
+	SIGNAL	ms_count	: INTEGER RANGE 0 TO cyc_per_10ms-1;
+	SIGNAL	cpu_count	: INTEGER RANGE 0 TO ms_per_clk-1;
 
 BEGIN
 
@@ -111,30 +118,62 @@ BEGIN
         SEDSTDBY    => open
     );
 
-    pin20_miso  <= led AND (NOT pin21) AND (not halt);
-    rst         <= NOT pin22;
+	pin1		<= cpu_out(0);
+	pin2		<= cpu_out(1);
+	pin3_sn		<= cpu_out(2);
+	pin4_mosi	<= cpu_out(3);
+	pin5		<= cpu_out(4);
+	pin6		<= cpu_out(5);
+	pin7_done	<= cpu_out(6);
+	pin8_pgmn	<= cpu_out(7);
     pin9_jtgnb  <= tx_o;
     
-    PROCESS(clk, rst)
-        VARIABLE count :    INTEGER RANGE 0 TO ((C_SYSTEM_HZ/C_TARGET_HZ)/2);
+	pin16		<= 'Z';	
+	pin17		<= 'Z';	
+	pin18_cs	<= 'Z';
+	pin19_sclk	<= 'Z';	
+
+	pin20_miso	<= led AND (NOT user_btn) AND (NOT halt);
+
+	btn_read: PROCESS(clk, rst)
+	BEGIN
+		IF(rising_edge(clk)) THEN
+			if (ms_count = 0) then
+				user_btn <= user_btn_ff(1);
+				rst_btn <= rst_btn_ff(1);
+			end if;
+			user_btn_ff	<= user_btn_ff(0) & pin21;
+			rst_btn_ff	<= rst_btn_ff(0) & (NOT pin22);
+		end if;
+	END PROCESS btn_read;
+
+	rst			<= rst_btn;
+
+	slow_clk: PROCESS(clk, rst)
     BEGIN
         IF(rst = '1') THEN
-            count := 0;
+			ms_count	<= 0;
+			cpu_count	<= 0;
             led <= '0';
             clk_en <= '0';
         ELSE
             IF(rising_edge(clk)) THEN
                 clk_en <= '0';
-                IF(count < ((C_SYSTEM_HZ/C_TARGET_HZ)/2)) THEN
-                    count := count + 1;
+				if (ms_count = 0) then
+					ms_count <= cyc_per_10ms - 1;
+					IF (cpu_count = 0) THEN
+						cpu_count <= ms_per_clk - 1;
+						led <= NOT led;
+						clk_en <= NOT led;
+					else
+						cpu_count <= cpu_count - 1;
+					end if;
                 ELSE
-                    count := 0;
-                    led <= NOT led;
-                    clk_en <= '1' AND (NOT pin21);
+					ms_count <= ms_count - 1;
                 END IF;
             END IF;
         END IF;
-    END PROCESS;
+	END PROCESS slow_clk;
 
     sys: entity work.system
     generic map (
@@ -145,17 +184,10 @@ BEGIN
         clk_en_i    => clk_en,
         rst_i       => rst,
         out_o       => cpu_out,
+		out_rdy_o	=> cpu_out_rdy,
         halt_o      => halt,
         tx_o        => tx_o
     );
     
-    pin1        <= cpu_out(0);
-    pin2        <= cpu_out(1);
-    pin3_sn     <= cpu_out(2);
-    pin4_mosi   <= cpu_out(3);
-    pin5        <= cpu_out(4);
-    pin6        <= cpu_out(5);
-    pin7_done   <= cpu_out(6);
-    pin8_pgmn   <= cpu_out(7);
 
 END ARCHITECTURE RTL;

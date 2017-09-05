@@ -37,6 +37,7 @@ ENTITY system IS
         clk_en_i    : IN    STD_LOGIC;
         rst_i       : IN    STD_LOGIC;
         out_o       : OUT   STD_LOGIC_VECTOR(7 downto 0);
+		out_rdy_o	: OUT	STD_LOGIC;
         halt_o      : OUT   STD_LOGIC;
         tx_o        : OUT   STD_LOGIC
     );
@@ -61,16 +62,13 @@ ARCHITECTURE RTL OF system IS
     SIGNAL  tx_write        : STD_LOGIC := '0';
     SIGNAL  tx_data         : STD_LOGIC_VECTOR(7 downto 0) := (others => '0');
 
-    SIGNAL  last_clk_en     : STD_LOGIC := '0';
-    SIGNAL  last_cpu_debug  : STD_LOGIC_VECTOR(7 downto 0) := (others => '0');
-    
-    SIGNAL  state           : integer range 0 to 63;
+    SIGNAL  trace_busy      : STD_LOGIC := '0';
 BEGIN
 
     -- internal signals
     rst     <= rst_i;
-    clk     <= clk_i;
-    clk_en  <= clk_en_i;
+	clk		<= clk_i;
+	clk_en	<= clk_en_i AND (NOT trace_busy);
     
     -- instantiate CPU
     CPU: entity work.cpu
@@ -83,8 +81,8 @@ BEGIN
         ram_addr_o  => ram_addr,
         ram_write_o => ram_we,
         hlt_o       => halt,
-        out_val_o   => out_o,
-        out_rdy_o   => open,
+	    out_val_o	=> out_o,
+	    out_rdy_o	=> out_rdy_o,
         debug_sel_i => cpu_debug_sel,   -- CPU debug register select
         debug_out_o => cpu_debug_out    -- CPU debug register data
     );
@@ -93,6 +91,10 @@ BEGIN
     -- instantiate RAM
     -- NOTE: FPGA BRAM is clocked, not asynchronous.  So we clock on falling edge (so data will be ready for CPU on next rising edge).
     bram: entity work.ram
+	generic map(
+		addrwidth	=>	4,
+		datawidth	=>	8
+	)
     port map(
         clk_i       => clk, 
         we_i        => ram_we,  
@@ -108,6 +110,7 @@ BEGIN
         clk_en_i    => clk_en,  
         rst_i       => rst,
         halt_i      => halt,
+		busy_o		=> trace_busy,
         tx_busy_i   => tx_busy,
         tx_write_o  => tx_write,
         tx_data_o   => tx_data,

@@ -422,24 +422,23 @@ BEGIN
         end if;
     END PROCESS control;
 
+	-- This is a simple "debug port" that saves having to run a large number of signals out of this module
+	-- but still provides a way to "peer inside" at the CPU state.
+	-- Here are how the debug registers are mapped:
+	--
+	--								debug_out_o
+	-- debug_sel_i 0000		id h  su cy  0  t  t  t
+	-- debug_sel_i 0001		0  ce co ro io ao bo eo
+	-- debug_sel_i 0010		jc j  mi ri ii ai bi oi
+	-- debug_sel_i 0011		cpu_bus
+	-- debug_sel_i 0100		0  0  0  0  mar
+	-- debug_sel_i 0101		0  0  0  0  pc
+	-- debug_sel_i 0110		i
+	-- debug_sel_i 0111		a
+	-- debug_sel_i 1000		b
+	-- debug_sel_i 1001		o
 
-    -- This is a simple "debug port" that saves having to run a large number of signals out of this module
-    -- but still provides a way to "peer inside" at the CPU state.
-    -- Here are how the debug registers are mapped:
-    --
-    --                              debug_out_o
-    -- debug_sel_i 0000     id h  su cy  0  t  t  t
-    -- debug_sel_i 0001     0  ce co ro io ao bo eo
-    -- debug_sel_i 0010     jc j  mi ri ii ai bi oi
-    -- debug_sel_i 0011     cpu_bus
-    -- debug_sel_i 0100     0  0  0  0  mar
-    -- debug_sel_i 0101     0  0  0  0  pc
-    -- debug_sel_i 0110     i
-    -- debug_sel_i 0111     a
-    -- debug_sel_i 1000     b
-    -- debug_sel_i 1001     o
-
-    debug: PROCESS(t_cyc, h, id, pc, j, jc, ci, co, ce, mar, mi, ri, ro, ir, ii, io, a, ai, ao, e, eo, cy, su, b, bi, bo, o, oi, cpu_bus)
+	debug: PROCESS(clk, cpu_bus, debug_sel_i, t_cyc, h, id, pc, jc, ci, co, ce, mar, mi, ri, ro, ir, ii, io, a, ai, ao, eo, cy, su, b, bi, bo, o, oi)
         VARIABLE    bus_save: UNSIGNED(7 downto 0);
     BEGIN
         -- need to capture bus on clock edge to get desired value (as CPU does)

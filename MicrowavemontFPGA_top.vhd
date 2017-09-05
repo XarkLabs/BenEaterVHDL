@@ -26,15 +26,15 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-library machxo2;
-use machxo2.all;
 
--- Microwavemont-A2 hook-up is as follows:
+
+-- MicrowavemontFPGA hook-up is as follows:
 --
--- Pins 1-8 are "output" register of CPU (binary for LED, e.g.)
--- Pin 9 is 9600 baud 8N1 serial CPU trace output TX (use USB serial adapter)
--- Pin22 is reset (active LOW)-- Pin21 is "wait" (will halt CPU clock while high)
--- pin20 is clock LED (blicks with "slow" clock)
+-- LED 1-8 are "output" register of CPU (LSB on right)
+-- Pin SDA is 9600 baud 8N1 serial CPU trace output TX (use USB serial adapter)
+-- S1 is reset -- S2 is "wait" (will halt CPU clock while pressed)
+-- left digit decimal point LED is clock (blicks with "slow" clock)
+-- Right digit decimal point LED is halt (lights if CPU halted)
 
 ENTITY Microwavemont_top IS
 	generic
@@ -55,10 +55,11 @@ ENTITY Microwavemont_top IS
 		led7		: OUT	STD_LOGIC;
 		led8		: OUT	STD_LOGIC;
 		ledneg		: OUT	STD_LOGIC;
-		seg1neg		: OUT	STD_LOGIC;
-		seg2neg		: OUT	STD_LOGIC;
-		sda			: OUT	STD_LOGIC;
-		buzzer		: OUT	STD_LOGIC;		
+		digit1neg	: OUT	STD_LOGIC;
+		digit2neg	: OUT	STD_LOGIC;
+		scl			: IN	STD_LOGIC;	-- RX (currently unused)
+		sda			: OUT	STD_LOGIC;	-- TX (9600 N 1)
+		sounder		: OUT	STD_LOGIC;
 		btn1		: IN	STD_LOGIC;
 		btn2		: IN	STD_LOGIC
 	);
@@ -66,60 +67,86 @@ END Microwavemont_top;
 
 ARCHITECTURE RTL of Microwavemont_top is
 
-	SIGNAL	rst		: STD_LOGIC := '0';							-- asynchronous reset
-	SIGNAL	clk		: STD_LOGIC := '0';							-- CPU clock
-	SIGNAL	clk_en	: STD_LOGIC := '0';							-- CPU clock enable (clock ignored if 0)
-	SIGNAL	halt	: STD_LOGIC := '0';							-- CPU halted
+	SIGNAL	rst			: STD_LOGIC := '0';						-- asynchronous reset
+	SIGNAL	clk			: STD_LOGIC := '0';						-- CPU clock
+	SIGNAL	clk_en		: STD_LOGIC := '0';						-- CPU clock enable (clock ignored if 0)
+	SIGNAL	halt		: STD_LOGIC := '0';						-- CPU halted
 
-	SIGNAL	cpu_out	: STD_LOGIC_VECTOR(7 downto 0) := (others => '0');
-	SIGNAL	cpu_out_rdy : STD_LOGIC;	
+	SIGNAL	cpu_out		: STD_LOGIC_VECTOR(7 downto 0) := (others => '0');
+	SIGNAL	cpu_out_rdy	: STD_LOGIC := '0';	
 
-	SIGNAL	tx_o	: STD_LOGIC;	
+	SIGNAL	tx_o		: STD_LOGIC := '0';	
 	
-	SIGNAL	led		: STD_LOGIC := '0';
+	SIGNAL	rst_btn_ff	: STD_LOGIC_VECTOR(1 downto 0) := "11";
+	SIGNAL	rst_btn		: STD_LOGIC := '0';
+	SIGNAL	user_btn_ff	: STD_LOGIC_VECTOR(1 downto 0) := "00";
+	SIGNAL	user_btn	: STD_LOGIC := '0';
+
+	SIGNAL	led			: STD_LOGIC := '0';
+
+	CONSTANT cyc_per_10ms : INTEGER := (C_SYSTEM_HZ+50)/100;
+	CONSTANT ms_per_clk	: INTEGER := (C_TARGET_HZ*100)/2;
+
+	SIGNAL	ms_count	: INTEGER RANGE 0 TO cyc_per_10ms-1;
+	SIGNAL	cpu_count	: INTEGER RANGE 0 TO ms_per_clk-1;
 	
-	SIGNAL	spi_sck	: STD_LOGIC := '0';
-	SIGNAL	spi_mosi: STD_LOGIC := '0';
-	SIGNAL	spi_dc	: STD_LOGIC := '0';
-	SIGNAL	spi_cs	: STD_LOGIC := '0';
-	
-	SIGNAL	vled	: STD_LOGIC_VECTOR(7 downto 0);				-- "virtual" LEDs multiplexed with 7-segment onto real LEDs
-	SIGNAL	segments: STD_LOGIC_VECTOR(7 downto 0);				-- 7-segment segments (a, b, c, d, e, f, g, dp)
+	SIGNAL	vled		: STD_LOGIC_VECTOR(7 downto 0);			-- "virtual" LEDs multiplexed with 7-segment onto real LEDs
+	SIGNAL	segments	: STD_LOGIC_VECTOR(7 downto 0);			-- 7-segment segments (a, b, c, d, e, f, g, dp)
 
 	SIGNAL 	number_r	: STD_LOGIC_VECTOR (7 downto 0);		-- 8-bit number to display in hex
 	SIGNAL 	decimals_r	: STD_LOGIC_VECTOR (1 downto 0);		-- decimal point for each digit (left, right)
-	SIGNAL 	blank_r	: STD_LOGIC_VECTOR (1 downto 0);		-- decimal point for each digit (left, right)
+	SIGNAL 	blank_r		: STD_LOGIC_VECTOR (1 downto 0);		-- true if digit is to be blanked (no segments lit)
 
-	SIGNAL 	counter		: UNSIGNED (12 downto 0);				-- count to 0x1ffff for ~= 244Hz @ 12Mhz clock
-	SIGNAL 	digit		: INTEGER range 0 to 2;					-- digit number being multiplexed (0 = rightmost)
+	SIGNAL 	counter		: UNSIGNED (12 downto 0);				-- count to 0x1fff for ~= 1464Hz @ 12Mhz clock
+	SIGNAL 	digit		: INTEGER range 0 to 2;					-- digit number being multiplexed (0 = right, 1=left, 2=leds)
 
 BEGIN
 	clk			<= clk_12mhz;
 	rst			<= NOT btn1;
-	buzzer		<= '0';
+	sounder		<= '0';
 	
-	sda			<= tx_o;
-	
-	PROCESS(clk, rst)
-		VARIABLE count :	INTEGER RANGE 0 TO ((C_SYSTEM_HZ/C_TARGET_HZ)/2);
+	scl			<= 'Z';
+	sda			<= tx_o;	-- make sure to hook GND to serial adapter GND also
+
+	btn_read: PROCESS(clk, rst)
 	BEGIN
-		IF(rst = '1') THEN
-			count := 0;
-			led <= '0';
-			clk_en <= '0';
-		ELSE
-			IF(rising_edge(clk)) THEN
-				clk_en <= '0';
-				IF(count < ((C_SYSTEM_HZ/C_TARGET_HZ)/2)) THEN
-					count := count + 1;
-				ELSE
-					count := 0;
-					led <= NOT led;
-					clk_en <= '1' AND btn2;
-				END IF;
-			END IF;
-		END IF;
-	END PROCESS;
+		IF(rising_edge(clk)) THEN
+			if (ms_count = 0) then
+				user_btn <= user_btn_ff(1);
+				rst_btn <= rst_btn_ff(1);
+			end if;
+			user_btn_ff	<= user_btn_ff(0) & (NOT btn2);
+			rst_btn_ff	<= rst_btn_ff(0) & (NOT btn1);
+		end if;
+	END PROCESS btn_read;
+
+	rst			<= rst_btn;
+	
+	slow_clk: PROCESS(clk, rst)
+    BEGIN
+        IF(rst = '1') THEN
+			ms_count	<= 0;
+			cpu_count	<= 0;
+            led <= '0';
+            clk_en <= '0';
+        ELSE
+            IF(rising_edge(clk)) THEN
+                clk_en <= '0';
+				if (ms_count = 0) then
+					ms_count <= cyc_per_10ms - 1;
+					IF (cpu_count = 0) THEN
+						cpu_count <= ms_per_clk - 1;
+						led <= NOT led;
+						clk_en <= (NOT led) AND (NOT user_btn);
+					else
+						cpu_count <= cpu_count - 1;
+					end if;
+                ELSE
+					ms_count <= ms_count - 1;
+                END IF;
+            END IF;
+        END IF;
+	END PROCESS slow_clk;
 
 	sys: entity work.system
 	generic map (
@@ -137,9 +164,8 @@ BEGIN
 	
 	vled		<= cpu_out;		-- signal to display on 8 LEDs
 	number_r 	<= cpu_out;		-- signal to display as 2 digit hex on 7-segments
-	decimals_r	<= halt & ((led AND btn2) AND (NOT halt));	-- decimal points per digit
+	decimals_r	<= halt & (led AND (NOT user_btn) AND (NOT halt));	-- decimal points per digit
 	blank_r		<= NOT cpu_out_rdy & NOT cpu_out_rdy;	-- blank out per digit
-
 
 	led1	<= NOT segments(7);
 	led2	<= NOT segments(6);
@@ -166,10 +192,10 @@ BEGIN
 			bitnum := digit * 4;
 			
 			case digit is
-				when 0 => seg1neg <= '1'; seg2neg <= '0'; ledneg <= '1'; 
-				when 1 => seg1neg <= '0'; seg2neg <= '1'; ledneg <= '1'; 
-				when 2 => seg1neg <= '1'; seg2neg <= '1'; ledneg <= '0'; 
-				when others => seg1neg <= '1'; seg2neg <= '1'; ledneg <= '1';
+				when 0 => digit1neg <= '1'; digit2neg <= '0'; ledneg <= '1'; 
+				when 1 => digit1neg <= '0'; digit2neg <= '1'; ledneg <= '1'; 
+				when 2 => digit1neg <= '1'; digit2neg <= '1'; ledneg <= '0'; 
+				when others => digit1neg <= '1'; digit2neg <= '1'; ledneg <= '1';
 			end case;
 			if (digit >= 2) then
 				segments	<= vled;

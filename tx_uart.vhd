@@ -28,65 +28,55 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
 entity tx_uart is
-    generic (
-        C_SYSTEM_HZ: integer := 1_000_000;          -- FPGA clock in Hz
-        C_BPS:  integer := 9600                     -- UART transmition rate in bits per second (aka baud)
-    );
-    port (
-        rst_i:  in  std_logic;                      -- reset
-        clk_i:  in  std_logic;                      -- FPGA clock
+	generic (
+		C_SYSTEM_HZ: integer := 1_000_000;			-- FPGA clock in Hz
+		C_BPS:	integer := 9600						-- UART transmition rate in bits per second (aka baud)
+	);
+	port (
+		rst_i:	IN  STD_LOGIC;						-- reset
+		clk_i:	IN  STD_LOGIC;						-- FPGA clock
 
-        tx_o:   out std_logic;                      -- TX pin output
-        busy_o: out std_logic;                      -- high when UART busy transmitting
-
-        data_i: in  std_logic_vector(7 downto 0);   -- data to send
-        we_i:   in  std_logic                       -- set high to send byte (when busy_o is low)
-    );
+		we_i:	IN  STD_LOGIC;						-- pulse high to send byte (when busy_o is low)
+		data_i:	IN  STD_LOGIC_VECTOR(7 downto 0);	-- data to send
+		
+		busy_o: OUT STD_LOGIC;						-- high when UART busy transmitting
+		tx_o:	OUT STD_LOGIC						-- TX pin output
+	);
 end tx_uart;
 
 architecture RTL of tx_uart is
-    constant clocks_per_bit: integer := (C_SYSTEM_HZ / C_BPS);  -- determine number of FPGA clocks that will be one bit for UART bits per second
+	CONSTANT clocks_per_bit: INTEGER := (C_SYSTEM_HZ / C_BPS);	-- determine number of FPGA clocks that will be one bit for UART bits per second
 
-    signal  busy_r:     std_logic;
+	SIGNAL	bps_counter:	INTEGER range 0 to clocks_per_bit - 1;
+	SIGNAL	shift_out:		STD_LOGIC_VECTOR(10 downto 0);
+	SIGNAL	busy_r:			STD_LOGIC;
 
-    signal  bps_counter:    integer range 0 to clocks_per_bit-1;
-    signal  shift_out:      std_logic_vector(8 downto 0);
-    signal  bit_counter:    integer range 0 to 11;  -- start bit + 8 data bits + stop bit
-begin
+BEGIN
 
-process(clk_i, rst_i)
-begin
-    if rst_i='1' then
-        bps_counter <= 0;
-        bit_counter <= 0;
-        tx_o        <= '1';
-        busy_r      <= '0';
-    elsif rising_edge(clk_i) then
+PROCESS(clk_i, rst_i)
+BEGIN
+	if rst_i='1' then
+		bps_counter <= 0;
+		shift_out	<= "00000000001";
+	elsif rising_edge(clk_i) then
+		if (busy_r = '0') then
+			if (we_i = '1') then
+				shift_out <= "11" & data_i & "0";	-- stop bit & data & start bit
+				bps_counter <= clocks_per_bit - 1;
+			end if;
+		else
+			if (bps_counter = 0) then
+				bps_counter <= clocks_per_bit - 1;
+				shift_out <= "0" & shift_out(10 downto 1);
+			else
+				bps_counter <= bps_counter - 1;
+			end if;
+		end if;
+	end if;
+END PROCESS;
 
-        if bit_counter = 0 then
-            busy_r  <= '0';
-            tx_o    <= '1';
-        else
-            busy_r  <= '1';
-            tx_o    <= shift_out(0);
-        end if;
-        
-        if we_i = '1' AND bit_counter = 0 then
-            shift_out <= data_i & "0";
-            bit_counter <= 11;
-            bps_counter <= clocks_per_bit - 1;
-            busy_r      <= '1';
-        elsif bps_counter = 0 then
-            bps_counter <= clocks_per_bit - 1;
-            if bit_counter /= 0 then
-                bit_counter <= bit_counter - 1;
-                shift_out <= "1" & shift_out(8 downto 1);
-            end if;
-        else
-            bps_counter <= bps_counter - 1;
-        end if;
-        
-    end if;
-end process;
-busy_o <= busy_r OR we_i;
-end RTL;
+busy_r	<= '1' when (shift_out /= "00000000001") else '0';
+busy_o	<= busy_r OR we_i;
+tx_o	<= shift_out(0);
+
+END architecture RTL;

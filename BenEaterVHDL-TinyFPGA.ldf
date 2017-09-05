@@ -2,12 +2,12 @@
 <BaliProject version="3.2" title="BenEaterVHDL-TinyFPGA" device="LCMXO2-1200HC-4SG32C" default_implementation="TinyFPGA-impl">
     <Options/>
     <Implementation title="TinyFPGA-impl" dir="TinyFPGA-impl" description="TinyFPGA-impl" synthesis="synplify" default_strategy="Strategy1">
-        <Options def_top="TinyFPGA_top" top="system_tb"/>
+        <Options def_top="TinyFPGA_top" top="TinyFPGA_top"/>
         <Source name="TinyFPGA_top.vhd" type="VHDL" type_short="VHDL" syn_sim="SynOnly">
             <Options top_module="TinyFPGA_top"/>
         </Source>
         <Source name="system_tb.vhd" type="VHDL" type_short="VHDL" syn_sim="SimOnly">
-            <Options top_module="system_tb"/>
+            <Options/>
         </Source>
         <Source name="system.vhd" type="VHDL" type_short="VHDL">
             <Options/>
@@ -39,7 +39,7 @@
         <Source name="TinyFPGA-A2.lpf" type="Logic Preference" type_short="LPF">
             <Options/>
         </Source>
-        <Source name="TinyFPGA-impl/BenEaterVHDL_TinyFPGA_impl.xcf" type="Programming Project File" type_short="Programming">
+        <Source name="TinyFPGA-impl/TinyFPGA-impl.xcf" type="Programming Project File" type_short="Programming">
             <Options/>
         </Source>
     </Implementation>

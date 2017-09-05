@@ -102,10 +102,8 @@ ARCHITECTURE RTL of Microwavemont_top is
 
 BEGIN
 	clk			<= clk_12mhz;
-	rst			<= NOT btn1;
 	sounder		<= '0';
 	
-	scl			<= 'Z';
 	sda			<= tx_o;	-- make sure to hook GND to serial adapter GND also
 
 	btn_read: PROCESS(clk, rst)

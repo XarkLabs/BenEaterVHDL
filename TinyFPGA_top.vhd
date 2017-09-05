@@ -164,7 +164,7 @@ BEGIN
 					IF (cpu_count = 0) THEN
 						cpu_count <= ms_per_clk - 1;
 						led <= NOT led;
-						clk_en <= NOT led;
+						clk_en <= (NOT led) AND (not user_btn);
 					else
 						cpu_count <= cpu_count - 1;
 					end if;

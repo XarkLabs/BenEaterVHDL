@@ -32,6 +32,7 @@ use ieee.numeric_std.all;
 --
 -- LED 1-8 are "output" register of CPU (LSB on right)
 -- Pin SDA is 9600 baud 8N1 serial CPU trace output TX (use USB serial adapter)
+-- Pin SCL is 9600 baud 8N1 serial RX input (optional, used to auto-set baud rate)
 -- S1 is reset -- S2 is "wait" (will halt CPU clock while pressed)
 -- left digit decimal point LED is clock (blicks with "slow" clock)
 -- Right digit decimal point LED is halt (lights if CPU halted)
@@ -40,8 +41,9 @@ ENTITY Microwavemont_top IS
 	generic
 	(
 		C_SYSTEM_HZ:	integer	:= 12_000_000;	-- master clock (in Hz)
-		C_TARGET_HZ:	integer := 2			-- speed of "slow" clock in Hz used by CPU
+		C_TARGET_HZ:	integer := 2;			-- speed of "slow" clock in Hz used by CPU
 												-- needs to be low so CPU trace has time
+		C_AUTOBAUD:		boolean	:= true			-- use RX bit interval to set baud rate	(type 'U' for best results)	
 	);
 
 	PORT(
@@ -57,7 +59,7 @@ ENTITY Microwavemont_top IS
 		ledneg		: OUT	STD_LOGIC;
 		digit1neg	: OUT	STD_LOGIC;
 		digit2neg	: OUT	STD_LOGIC;
-		scl			: IN	STD_LOGIC;	-- RX (currently unused)
+		scl			: IN	STD_LOGIC;	-- RX (optional for auto baud set)
 		sda			: OUT	STD_LOGIC;	-- TX (9600 N 1)
 		sounder		: OUT	STD_LOGIC;
 		btn1		: IN	STD_LOGIC;
@@ -76,6 +78,7 @@ ARCHITECTURE RTL of Microwavemont_top is
 	SIGNAL	cpu_out_rdy	: STD_LOGIC := '0';	
 
 	SIGNAL	tx_o		: STD_LOGIC := '0';	
+	SIGNAL	rx_i		: STD_LOGIC := '0';	
 	
 	SIGNAL	rst_btn_ff	: STD_LOGIC_VECTOR(1 downto 0) := "11";
 	SIGNAL	rst_btn		: STD_LOGIC := '0';
@@ -105,6 +108,7 @@ BEGIN
 	sounder		<= '0';
 	
 	sda			<= tx_o;	-- make sure to hook GND to serial adapter GND also
+	rx_i		<= scl;
 
 	btn_read: PROCESS(clk, rst)
 	BEGIN
@@ -148,7 +152,8 @@ BEGIN
 
 	sys: entity work.system
 	generic map (
-		C_SYSTEM_HZ	=> C_SYSTEM_HZ
+		C_SYSTEM_HZ	=> C_SYSTEM_HZ,
+		C_AUTOBAUD	=> C_AUTOBAUD
 	)
 	port map(
 		clk_i		=> clk,	
@@ -157,7 +162,8 @@ BEGIN
 		out_o		=> cpu_out,
 		out_rdy_o	=> cpu_out_rdy,
 		halt_o		=> halt,
-		tx_o		=> tx_o
+		tx_o		=> tx_o,
+		rx_i		=> rx_i
 	);
 	
 	vled		<= cpu_out;		-- signal to display on 8 LEDs

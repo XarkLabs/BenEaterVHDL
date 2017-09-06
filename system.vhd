@@ -30,7 +30,8 @@ use ieee.numeric_std.all;
 ENTITY system IS
 	generic
 	(
-		C_SYSTEM_HZ:	integer := 1_000_000	-- master clock (in Hz)
+		C_SYSTEM_HZ	:	integer := 1_000_000;	-- master clock (in Hz)
+		C_AUTOBAUD	:	boolean := true		-- use RX bit interval to set baud rate
 	);
 	PORT(
 		clk_i		: IN	STD_LOGIC;
@@ -39,7 +40,8 @@ ENTITY system IS
 		out_o		: OUT	STD_LOGIC_VECTOR(7 downto 0);
 		out_rdy_o	: OUT	STD_LOGIC;
 		halt_o		: OUT	STD_LOGIC;
-		tx_o		: OUT	STD_LOGIC
+		tx_o		: OUT	STD_LOGIC;
+		rx_i		: IN	STD_LOGIC
 	);
 END system;
 
@@ -122,12 +124,14 @@ BEGIN
 	UART: entity work.tx_uart
 	generic map(
 		C_SYSTEM_HZ => C_SYSTEM_HZ,
-		C_BPS		=> 9600				-- baud rate (8-bit, no parity, 1 stop bit)
+		C_BPS		=> 9600,			-- baud rate (8-bit, no parity, 1 stop bit)
+		C_AUTOBAUD	=> C_AUTOBAUD
 	)
 	port map(
 		rst_i	=>	rst,				-- reset
 		clk_i	=>	clk,				-- FPGA clock
-		tx_o	=>	tx_o,				-- TX pin	 output
+		tx_o	=>	tx_o,				-- TX out
+		rx_i	=>	rx_i,				-- RX in
 		busy_o	=>	tx_busy,			-- high when UART busy transmitting
 		data_i	=>	tx_data,			-- data to send
 		we_i	=>	tx_write			-- set high to send byte (when busy_o is low)

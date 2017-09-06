@@ -33,6 +33,7 @@ use machxo2.all;
 --
 -- Pins 1-8 are "output" register of CPU (binary for LED, e.g.)
 -- Pin 9 is 9600 baud 8N1 serial CPU trace output TX (use USB serial adapter)
+-- pin 10 is 9600 baud 8N1 serial input RX (optional, used to auto-set output baud rate)
 -- Pin22 is reset (active LOW)
 -- Pin21 is "wait" (will halt CPU clock while high)
 -- pin20 is clock LED (blicks with "slow" clock)
@@ -41,8 +42,9 @@ ENTITY TinyFPGA_top IS
 	generic
 	(
 		C_SYSTEM_HZ:	integer	:= 19_000_000;	-- master clock (in Hz)
-		C_TARGET_HZ:	integer := 1			-- speed of "slow" clock in Hz used by CPU
+		C_TARGET_HZ:	integer := 1;			-- speed of "slow" clock in Hz used by CPU
 												-- needs to be low so CPU trace has time
+		C_AUTOBAUD	:	boolean := true			-- use RX bit interval to set baud rate	(type 'U' for best results)	
 	);
 
 	PORT(
@@ -55,10 +57,12 @@ ENTITY TinyFPGA_top IS
 		pin7_done	: OUT	STD_LOGIC;	-- CPU out 6 led 
 		pin8_pgmn	: OUT	STD_LOGIC;	-- CPU out 7 led 
 		pin9_jtgnb	: OUT	STD_LOGIC;	-- UART tx out
-		pin16		: OUT	STD_LOGIC;	-- LCD MOSI out
-		pin17		: OUT	STD_LOGIC;	-- LCD DC out
-		pin18_cs	: OUT	STD_LOGIC;	-- LCD /CS out
-		pin19_sclk	: OUT	STD_LOGIC;	-- LCD SCK out
+		pin10_sda	: IN	STD_LOGIC;	-- UART rx in
+		pin11_scl	: OUT	STD_LOGIC;	-- unused
+		pin16		: OUT	STD_LOGIC;	-- unused
+		pin17		: OUT	STD_LOGIC;	-- unused
+		pin18_cs	: OUT	STD_LOGIC;	-- unused
+		pin19_sclk	: OUT	STD_LOGIC;	-- unused
 		pin20_miso	: OUT	STD_LOGIC;	-- CPU slow clock LED
 		pin21		: IN	STD_LOGIC;	-- PAUSE button
 		pin22		: IN	STD_LOGIC	-- /RESET button
@@ -91,6 +95,7 @@ ARCHITECTURE RTL of TinyFPGA_top is
 	SIGNAL	cpu_out_rdy	: STD_LOGIC := '0';	
 	
 	SIGNAL	tx_o		: STD_LOGIC := '0';	
+	SIGNAL	rx_i		: STD_LOGIC := '0';	
 	
 	SIGNAL	rst_btn_ff	: STD_LOGIC_VECTOR(1 downto 0) := "11";
 	SIGNAL	rst_btn		: STD_LOGIC := '0';
@@ -127,7 +132,9 @@ BEGIN
 	pin7_done	<= cpu_out(6);
 	pin8_pgmn	<= cpu_out(7);
 	pin9_jtgnb	<= tx_o;
-	
+	rx_i		<= pin10_sda;
+	pin11_scl	<= 'Z';
+
 	pin16		<= 'Z';	
 	pin17		<= 'Z';	
 	pin18_cs	<= 'Z';
@@ -177,7 +184,8 @@ BEGIN
 
 	sys: entity work.system
 	generic map (
-		C_SYSTEM_HZ => C_SYSTEM_HZ
+		C_SYSTEM_HZ => C_SYSTEM_HZ,
+		C_AUTOBAUD	=> C_AUTOBAUD
 	)
 	port map(
 		clk_i		=> clk, 
@@ -186,7 +194,8 @@ BEGIN
 		out_o		=> cpu_out,
 		out_rdy_o	=> cpu_out_rdy,
 		halt_o		=> halt,
-		tx_o		=> tx_o
+		tx_o		=> tx_o,
+		rx_i		=> rx_i
 	);
 	
 

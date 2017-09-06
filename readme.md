@@ -90,6 +90,8 @@ Prints this "CPU trace" on a serial terminal
 	
 NOTE: The TinyFPGA-A2 board does not have a clock source other than the internal oscillator.  This oscillator can vary by +/-5% (per datasheet).  If you get "unlucky" it is possible that the oscillator will be off too much for reliable 9600 baud communication.  Of the three XO2 parts I tried, two worked fine, but one printed garbage.  I hooked up a logic analyzer and found that its 9600 baud was closer to 10525 baud.  When I entered this into my terminal program (Tera Term), the "garbage" decoded fine.  If you have trouble, you may be able to "guess" a few hundred baud faster or slower and get it working.
 
+UPDATE: Due to the above issue (and to allow baud rates other than 9600), there is now simple optional "auto-baud" functionality enabled (but still defaults to 9600 baud).  To use this hook "pin10_sda" for TinyFPGA-A2 or "scl" for MicrowavemontFPGA to the TX of the serial adapter (i.e., TX from PC is RX into FPGA).  Then type "U" (ideally) a few times after reset and the FPGA should switch to match the incoming baud rate.  This will compensate for TinyFPGA internal oscillator speed as well as allow other baud rates (e.g., 115,200).
+
 This design uses a fairly small amount of FPGA resources and should be very easily be moved to other FPGAs.
 
 On the MachXO2-1200 here is the resource use (on TinyFPGA-A2 board):

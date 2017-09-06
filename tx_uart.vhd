@@ -30,7 +30,8 @@ use IEEE.NUMERIC_STD.ALL;
 entity tx_uart is
 	generic (
 		C_SYSTEM_HZ: integer := 1_000_000;			-- FPGA clock in Hz
-		C_BPS:	integer := 9600						-- UART transmition rate in bits per second (aka baud)
+		C_BPS:	integer := 9600;					-- UART transmition rate in bits per second (aka baud)
+		C_AUTOBAUD: boolean := true
 	);
 	port (
 		rst_i:	IN	STD_LOGIC;						-- reset
@@ -40,36 +41,44 @@ entity tx_uart is
 		data_i:	IN	STD_LOGIC_VECTOR(7 downto 0);	-- data to send
 		
 		busy_o: OUT STD_LOGIC;						-- high when UART busy transmitting
-		tx_o:	OUT STD_LOGIC						-- TX pin output
+		tx_o:	OUT STD_LOGIC;						-- TX pin output
+		rx_i:	IN STD_LOGIC						-- TX pin output
 	);
 end tx_uart;
 
 architecture RTL of tx_uart is
 	CONSTANT clocks_per_bit: INTEGER := (C_SYSTEM_HZ / C_BPS);	-- determine number of FPGA clocks that will be one bit for UART bits per second
-
-	SIGNAL	bps_counter:	INTEGER range 0 to clocks_per_bit - 1;
+	SIGNAL	bps_count:		UNSIGNED(11 downto 0) := to_unsigned(clocks_per_bit - 1, 12);
+	SIGNAL	bps_counter:	UNSIGNED(11 downto 0) := (others => '0');
 	SIGNAL	shift_out:		STD_LOGIC_VECTOR(10 downto 0);
 	SIGNAL	busy_r:			STD_LOGIC;
+
+	SIGNAL	bit_ff:			STD_LOGIC_VECTOR(3 downto 0);
+	SIGNAL	bit_time:		UNSIGNED(11 downto 0);
+	SIGNAL	bit_time_count:	UNSIGNED(11 downto 0);
+
 
 BEGIN
 
 PROCESS(clk_i, rst_i)
 BEGIN
 	if rst_i='1' then
-		bps_counter <= 0;
+		bps_counter <= (others => '0');
 		shift_out	<= "00000000001";
-	elsif rising_edge(clk_i) then
-		if (busy_r = '0') then
-			if (we_i = '1') then
-				shift_out <= "11" & data_i & "0";	-- stop bit & data & start bit
-				bps_counter <= clocks_per_bit - 1;
-			end if;
-		else
-			if (bps_counter = 0) then
-				bps_counter <= clocks_per_bit - 1;
-				shift_out <= "0" & shift_out(10 downto 1);
+	else
+		if rising_edge(clk_i) then
+			if (busy_r = '0') then
+				if (we_i = '1') then
+					shift_out <= "11" & data_i & "0";	-- stop bit & data & start bit
+					bps_counter <= bps_count;
+				end if;
 			else
-				bps_counter <= bps_counter - 1;
+				if (bps_counter = 0) then
+					bps_counter <= bps_count;
+					shift_out <= "0" & shift_out(10 downto 1);
+				else
+					bps_counter <= bps_counter - 1;
+				end if;
 			end if;
 		end if;
 	end if;
@@ -78,5 +87,31 @@ END PROCESS;
 busy_r	<= '1' when (shift_out /= "00000000001") else '0';
 busy_o	<= busy_r OR we_i;
 tx_o	<= shift_out(0);
+
+autobaud: IF C_AUTOBAUD GENERATE
+	PROCESS(clk_i, rst_i)
+	BEGIN
+		if rst_i='1' then
+			bit_ff			<= "1111";
+			bit_time		<= (others => '1');
+			bit_time_count	<= (others => '0');
+			bps_count		<= to_unsigned(clocks_per_bit - 1, 12);
+		else
+			if rising_edge(clk_i) then
+				bit_ff	<= bit_ff(2 downto 0) & rx_i;
+				if (bit_ff(3 downto 0) = "1100") then
+					bit_time_count	<= (others => '0');
+				elsif (bit_ff(3 downto 0) = "0011") then
+					if (bit_time_count < bit_time) then
+						bit_time <= bit_time_count;
+						bps_count <= bit_time_count;
+					end if;
+				else
+					bit_time_count <= bit_time_count + 1;
+				end if;
+			end if;
+		end if;
+	END PROCESS;
+END GENERATE;
 
 END architecture RTL;

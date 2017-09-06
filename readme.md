@@ -87,8 +87,10 @@ Prints this "CPU trace" on a serial terminal
     T2: => 00000000 => | H
         C=0100 M=0011 I=11110000 (HLT) A=00101010 B=00010010 CY=0 O=00101010
     *HALTED*
+	
+NOTE: The TinyFPGA-A2 board does not have a clock source other than the internal oscillator.  This oscillator can vary by +/-5% (per datasheet).  If you get "unlucky" it is possible that the oscillator will be off too much for reliable 9600 baud communication.  Of the three XO2 parts I tried, two worked fine, but one printed garbage.  I hooked up a logic analyzer and found that its 9600 baud was closer to 10525 baud.  When I entered this into my terminal program (Tera Term), the "garbage" decoded fine.  If you have trouble, you may be able to "guess" a few hundred baud faster or slower and get it working.
 
-It only uses a small amount of FPGA resources and can likely very easily be moved to other FPGAs.
+This design uses a fairly small amount of FPGA resources and should be very easily be moved to other FPGAs.
 
 On the MachXO2-1200 here is the resource use (on TinyFPGA-A2 board):
 

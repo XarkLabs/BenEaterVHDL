@@ -27,7 +27,7 @@ Here are the instructions currently implemented:
     0010 mmmm   ADD M           A = A+RAM[M] (updates carry)    5 cycles
     0011 mmmm   SUB M           A = A-RAM[M] (updates carry)    5 cycles
     0100 mmmm   STA M           RAM[M] = A                      4 cycles
-    0101 iiii   LDI N           A = N (4-LSB)                   3 cycles
+    0101 nnnn   LDI N           A = N (4-LSB)                   3 cycles
     0110 mmmm   JMP M           PC = M                          3 cycles
     0111 mmmm   JCS M           if (carry) then PC = M          3 cycles
     1000 xxxx   ??? (unused, acts like NOP)

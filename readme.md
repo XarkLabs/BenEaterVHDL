@@ -29,8 +29,8 @@ Here are the instructions currently implemented:
     0100 mmmm   STA M           RAM[M] = A                      4 cycles
     0101 nnnn   LDI N           A = N (4-LSB)                   3 cycles
     0110 mmmm   JMP M           PC = M                          3 cycles
-    0111 mmmm   JCS M           if (carry) then PC = M          3 cycles
-    1000 xxxx   ??? (unused, acts like NOP)
+    0111 mmmm   JC  M           if (carry) then PC = M          3 cycles
+    1000 mmmm   JZ  M           if (zero) then PC = M           3 cycles
     1001 xxxx   ??? (unused, acts like NOP)
     1010 xxxx   ??? (unused, acts like NOP)
     1011 xxxx   ??? (unused, acts like NOP)

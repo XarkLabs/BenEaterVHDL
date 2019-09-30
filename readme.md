@@ -7,15 +7,14 @@ a lot of people understand how Ben's computer works from his excellent videos, i
 to Ben's terminology and design, but I couldn't resist changing a few minor things:
 
  * added JC "jump on carry set" instruction (which I suspect Ben will add also - [yep, he did])
- * added 1-bit "carry register" to support JCS
+ * added 1-bit "carry register" to support JC
  * also added JZ "jump on zero" instruction (as Ben did)
- * added 1-bit "zero register" to support JCS
  * added ID "instruction done" signal to skip any wasted cycles at the end of instruction microcode
  * used FPGA logic instead of ROM for microcode (looks similar to Arduino code Ben uses to generate microcode ROM with)
  * clocked FPGA BRAM on negative clock edge to "simulate" async RAM (data available on next CPU cycle)
  * no decimal 7-segment decode for output (but I do have nifty terminal trace...)
- * the JC and JZ implemtation are slightly different than Ben's, since on an FPGA it was easy to add a bit more logic
-   and control lines vs quadrupling the microcode ROM size (which is typically LUT based, so limited).
+ * JC and JZ implemtation differ slightly from Ben's, since on an FPGA it was easy to add a bit more logic
+   and control lines vs quadrupling the microcode ROM size (which is typically LUT based, so limited - and more typing).
 
 It has been developed on a TinyFPGA-A2 (http://tinyfpga.com/) board with a Lattice MachXO2-1200 FPGA using the Lattice Diamond software (free version). It has also been converted for use on the Microwavemont "FPGA board for I2C, SPI device prototyping" (https://hackaday.io/project/26175-hdl-training-board-by-fpga-for-real-beginner or https://www.tindie.com/products/microwavemont/fpga-board-for-i2c-spi-device-prototyping/).
 

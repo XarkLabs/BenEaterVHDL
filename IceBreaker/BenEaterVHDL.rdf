@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RadiantProject version="4.0" title="BenEaterVHDL" device="iCE40UP5K-SG48I" performance_grade="High-Performance_1.2V" default_implementation="IceBreaker-impl">
+    <Options/>
+    <Implementation title="IceBreaker-impl" dir="IceBreaker-impl" description="IceBreaker-impl" synthesis="synplify" default_strategy="Strategy1">
+        <Options def_top="IceBreaker_top"/>
+        <Source name="IceBreaker_top.vhd" type="VHDL" type_short="VHDL" syn_sim="SynOnly">
+            <Options top_module="IceBreaker_top"/>
+        </Source>
+        <Source name="IceBreaker_pmod_7seg.vhd" type="VHDL" type_short="VHDL">
+            <Options/>
+        </Source>
+        <Source name="../VHDL/system.vhd" type="VHDL" type_short="VHDL">
+            <Options/>
+        </Source>
+        <Source name="../VHDL/cpu.vhd" type="VHDL" type_short="VHDL">
+            <Options/>
+        </Source>
+        <Source name="../VHDL/ram.vhd" type="VHDL" type_short="VHDL">
+            <Options/>
+        </Source>
+        <Source name="../VHDL/cpu_trace.vhd" type="VHDL" type_short="VHDL">
+            <Options/>
+        </Source>
+        <Source name="../VHDL/tx_uart.vhd" type="VHDL" type_short="VHDL">
+            <Options/>
+        </Source>
+        <Source name="../VHDL-testbench/system_tb.vhd" type="VHDL" type_short="VHDL" syn_sim="SimOnly">
+            <Options/>
+        </Source>
+        <Source name="IceBreaker.fdc" type="Synplify Design Constraints File" type_short="SDC">
+            <Options/>
+        </Source>
+        <Source name="icebreaker.pdc" type="Physical Constraints File" type_short="PDC">
+            <Options/>
+        </Source>
+        <Source name="IceBreaker.xcf" type="Programming Project File" type_short="Programming">
+            <Options/>
+        </Source>
+    </Implementation>
+    <Strategy name="Strategy1" file="BenEaterVHDL1.sty"/>
+</RadiantProject>
